@@ -1,0 +1,13 @@
+--extra-index-url https://download.pytorch.org/whl/cu124
+
+gymnasium[classic_control,mujoco,atari,accept-rom-license]
+tensorboard
+tensorboardX
+matplotlib
+torch==2.6.0+cu124
+opencv-python
+pyyaml
+ipython
+moviepy
+ipdb
+tqdm
