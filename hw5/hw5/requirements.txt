@@ -1,0 +1,16 @@
+--extra-index-url https://download.pytorch.org/whl/cu124
+
+gymnasium
+tensorboard
+tensorboardX
+matplotlib
+moviepy
+pyvirtualdisplay
+torch==2.6.0+cu124
+opencv-python
+networkx==2.5
+ipdb
+box2d-py==2.3.8
+scipy
+tqdm
+numpy==1.26.4
