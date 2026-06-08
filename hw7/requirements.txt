@@ -1,0 +1,9 @@
+gymnasium[mujoco,classic_control]
+gymnasium-robotics
+mediapy
+torch==2.6.0
+tensorboard
+tensorboardX
+moviepy<2.0
+Flask
+numpy==1.26.4

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>CAS4160 HW7 - RLHF Rollout Feedback 🤖</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-family: 'Segoe UI', sans-serif;
+            background: #e6f0ff;
+        }
+
+        h1 {
+            text-align: center;
+            color: #3399ff;
+            margin: 40px 0 20px 0;
+            font-size: 36px;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .video-container {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .video-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 300px;
+        }
+
+        video {
+            width: 20vw;
+            max-width: 300px;
+            border: 6px solid #99ccff;
+            border-radius: 16px;
+        }
+
+        p {
+            font-size: 20px;
+            margin-top: 10px;
+            color: #444;
+        }
+
+        .select-button {
+            margin-top: 16px;
+            padding: 16px 32px;
+            font-size: 20px;
+            border: none;
+            border-radius: 10px;
+            background-color: #3399ff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .select-button:hover {
+            background-color: #267acc;
+        }
+
+        .message {
+            font-size: 22px;
+            color: #555;
+            margin-top: 100px;
+            text-align: center;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            color: #888;
+        }
+        progress {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 32px;
+            border: none;
+            border-radius: 16px;
+            background-color: #cce6ff;
+            overflow: hidden;
+        }
+
+        progress::-webkit-progress-bar {
+            background-color: #cce6ff;
+            border-radius: 16px;
+        }
+
+        progress::-webkit-progress-value {
+            background-color: #3399ff;
+            border-radius: 16px 0 0 16px;
+            transition: width 0.4s ease;
+        }
+
+        progress::-moz-progress-bar {
+            background-color: #3399ff;
+            border-radius: 16px 0 0 16px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>🤖 RLHF Rollout Comparison GUI 🤖</h1>
+        {% if done %}
+        <h3>Finished! Click the button below to finish experiment.</h3>
+        <div class="video-box" style="justify-content: center; align-items: center; display: flex; flex-direction: column;">
+            <button class="select-button" style="margin-top: 120px;" onclick="submitFeedback(-1.0)">Finish</button>
+        </div>
+        {% else %}
+            {% if video1 and video2 %}
+            <div class="video-container">
+                <div class="video-box">
+                    <video controls autoplay muted loop>
+                        <source src="{{ url_for('static', filename='uploads/' + video1) }}" type="video/mp4" />
+                        Your browser does not support the video tag.
+                    </video>
+                    <p>Video 1: {{ video1 }}::{{ reward1 }}</p>
+                    <button class="select-button" onclick="submitFeedback(0)">⬅️ Select Left</button>
+                </div>
+                <div class="video-box" style="justify-content: center; align-items: center; display: flex; flex-direction: column;">
+                    <button class="select-button" style="margin-top: 120px;" onclick="submitFeedback(0.5)">😐 Neutral</button>
+                </div>
+                <div class="video-box">
+                    <video controls autoplay muted loop>
+                        <source src="{{ url_for('static', filename='uploads/' + video2) }}" type="video/mp4" />
+                        Your browser does not support the video tag.
+                    </video>
+                    <p>Video 2: {{ video2 }}::{{ reward2 }}</p>
+                    <button class="select-button" onclick="submitFeedback(1.0)">➡️ Select Right</button>
+                </div>
+            </div>
+            <div style="width: 60%; margin: 40px auto;">
+                <progress value="{{ current_step|int }}" max="{{ total_step|int }}" style="width: 100%; height: 32px;"></progress>
+                <div style="text-align: center; font-size: 18px; margin-top: 8px;">
+                    Annotation Progress: {{ current_step }} / {{ total_step }}
+                </div>
+            </div>
+            {% else %}
+            <div class="message">🔄 Waiting for new rollouts... 🚀 Iteration : {{ iteration }}</div>
+            <div style="width: 60%; margin: 40px auto;">
+                <progress value="{{ iteration|int }}" max="{{ max_itr|int }}" style="width: 100%; height: 32px;"></progress>
+                <div style="text-align: center; font-size: 18px; margin-top: 8px;">
+                    Progress: {{ iteration }} / {{ max_itr }}
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <footer>
+        Made by Hokyun Im — 2025
+    </footer>
+
+    <script>
+        function submitFeedback(selectedVideo) {
+            fetch('/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ selected_video: selectedVideo }),
+            }).then(data => {
+                console.log(data);
+                if (data.status === 'close') {
+                    window.close(); // it may not work :(
+                }
+                window.location.reload();
+            });
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowLeft') {
+                submitFeedback(0.0);
+            } else if (event.key === 'ArrowRight') {
+                submitFeedback(1.0);
+            } else if (event.key === 'ArrowUp') {
+            submitFeedback(0.5);
+            }
+        });
+        {% if video1 and video2 %}
+        {% else %}
+        setInterval(function() {
+            window.location.reload();
+        }, 2000);
+        {% endif %}
+    </script>
+</body>
+</html>
